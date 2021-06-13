@@ -1,38 +1,157 @@
 package com.alanginger.wanandroid
 
 import android.os.Bundle
+import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.activity.viewModels
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.alanginger.wanandroid.model.Article
+import com.alanginger.wanandroid.ui.home.HomeViewModel
+import com.alanginger.wanandroid.ui.theme.Text_H1
+import com.alanginger.wanandroid.ui.theme.Text_H2
 import com.alanginger.wanandroid.ui.theme.WanAndroidComposeTheme
 
 class MainActivity : ComponentActivity() {
+    private val homeViewModel: HomeViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            WanAndroidComposeTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(color = MaterialTheme.colors.background) {
-                    Greeting("Android")
-                }
+            MyApp {
+                Content(homeViewModel)
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
+fun MyApp(content: @Composable () -> Unit) {
+    WanAndroidComposeTheme {
+        // A surface container using the 'background' color from the theme
+        Surface(color = MaterialTheme.colors.background) {
+            content()
+        }
+    }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
-    WanAndroidComposeTheme {
-        Greeting("Android")
+fun Content(viewModel: HomeViewModel) {
+    val articleList = viewModel.articleListLiveData.observeAsState()
+    LazyColumn(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        items(articleList.value?.datas ?: arrayListOf()) { item: Article ->
+            ArticleItem(item)
+            Divider(Modifier.padding(16.dp, 0.dp), thickness = 0.5.dp)
+        }
+    }
+}
+
+@Composable
+fun ArticleItem(
+    article: Article,
+) {
+    val context = LocalContext.current
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .clickable {
+            Toast
+                .makeText(context, "web?url=${article.link}", LENGTH_SHORT)
+                .show()
+        }) {
+        Column(
+            Modifier.padding(16.dp, 10.dp)
+        ) {
+            Row(Modifier.fillMaxWidth()) {
+                article.tags.forEach {
+                    Text(
+                        it.name,
+                        Modifier
+                            .align(Alignment.CenterVertically)
+                            .border(0.5.dp, Text_H1, RoundedCornerShape(3.dp))
+                            .padding(2.dp, 1.dp),
+                        Text_H1,
+                        10.sp
+                    )
+                    Spacer(
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .width(8.dp)
+                            .height(0.dp)
+                    )
+                }
+                Text(
+                    article.getAuthor(),
+                    Modifier
+                        .weight(1f)
+                        .align(Alignment.CenterVertically),
+                    Text_H2,
+                    12.sp
+                )
+                Spacer(
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .width(10.dp)
+                        .height(0.dp)
+                )
+                Text(
+                    article.niceDate,
+                    Modifier
+                        .align(Alignment.CenterVertically),
+                    Text_H2,
+                    12.sp
+                )
+            }
+            Text(
+                article.title,
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                Text_H1,
+                15.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 5.dp)
+            ) {
+                val chapter = StringBuilder(article.superChapterName)
+                if (article.superChapterName.isNotEmpty() && article.chapterName.isNotEmpty()) {
+                    chapter.append(" / ")
+                }
+                chapter.append(article.chapterName)
+                Text(
+                    chapter.toString(),
+                    Modifier
+                        .weight(1f)
+                        .align(Alignment.CenterVertically),
+                    Text_H2,
+                    12.sp,
+                )
+            }
+        }
     }
 }
