@@ -12,8 +12,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,15 +57,50 @@ fun MyApp(content: @Composable () -> Unit) {
 
 @Composable
 fun Content(viewModel: HomeViewModel) {
+    val context = LocalContext.current
     val articleList = viewModel.articleListLiveData.observeAsState()
-    LazyColumn(
-        Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        items(articleList.value?.datas ?: arrayListOf()) { item: Article ->
-            ArticleItem(item)
-            Divider(Modifier.padding(16.dp, 0.dp), thickness = 0.5.dp)
+    Column {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .background(Color.LightGray)
+        ) {
+            BasicTextField(
+                value = viewModel.keyword,
+                onValueChange = {
+                    viewModel.keyword = it
+                },
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterVertically)
+                    .padding(start = 16.dp, end = 16.dp)
+                    .weight(1f),
+                textStyle = TextStyle(fontSize = 16.sp),
+                singleLine = true
+            )
+            Icon(
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterVertically)
+                    .clickable {
+                        Toast
+                            .makeText(context, viewModel.keyword, LENGTH_SHORT)
+                            .show()
+                    }
+                    .size(48.dp)
+                    .padding(14.dp),
+                painter = painterResource(id = android.R.drawable.ic_menu_search),
+                contentDescription = "search",
+                tint = Color.DarkGray
+            )
+        }
+        LazyColumn(
+            Modifier
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            items(articleList.value?.datas ?: arrayListOf()) { item: Article ->
+                ArticleItem(item)
+                Divider(Modifier.padding(16.dp, 0.dp), thickness = 0.5.dp)
+            }
         }
     }
 }
